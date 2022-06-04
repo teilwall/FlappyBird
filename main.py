@@ -1,74 +1,16 @@
 import pygame
 from sys import exit
 from random import randint
+import Player
+import Obstacle
+
 
 BIRD = pygame.image.load('resources/FlappyBirdResized.png')
-PIPE = pygame.image.load('resources/Pipe.png')
 SKY_SURFACE = pygame.image.load('resources/Sky.png')
 GROUND_SURFACE = pygame.image.load('resources/ground.png')
 
 FONT = 'resources/PixelType.ttf'
 FPS = 60
-
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        player_image = BIRD.convert_alpha()
-        self.image = pygame.transform.rotozoom(player_image, 0, 0.12)
-        self.rect = self.image.get_rect(midbottom=(80, 250))
-        self.gravity = 0
-
-        # self.jump_sound = pygame.mixer.Sound('sounds/wing.wav')
-        # self.jump_sound.set_volume(0.5)
-
-    def player_input(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            self.gravity = -2.2
-            # self.jump_sound.play()
-
-    def apply_gravity(self):
-        self.gravity += 0.2
-        self.rect.y += self.gravity
-
-    def update(self):
-        self.player_input()
-        self.apply_gravity()
-        if self.rect.y >= 357 or self.rect.y < -2:
-            self.rect.y = 200
-            self.gravity = 0
-
-
-class Obstacle(pygame.sprite.Sprite):
-    def __init__(self, type, x_pos, height):
-        super().__init__()
-        if type == 'down':
-            self.image = pygame.transform.scale(PIPE.convert_alpha(), (40, height))
-            self.rect = self.image.get_rect(midbottom=(x_pos, 380))
-        elif type == 'up':
-            self.pipe = pygame.transform.scale(PIPE.convert_alpha(), (40, height))
-            self.image = pygame.transform.rotate(self.pipe, 180)
-            self.rect = self.image.get_rect(midtop=(x_pos, 0))
-
-    def update(self):
-        self.rect.x -= 6
-        self.destroy()
-
-    def destroy(self):
-        if self.rect.x <= -100:
-            self.kill()
-
-
-class Borders(pygame.sprite.Sprite):
-    def __init__(self, type):
-        super().__init__()
-        if type == 'down':
-            self.image = GROUND_SURFACE.convert()
-            self.rect = self.image.get_rect(topleft=(0, 380))
-        elif type == 'up':
-            self.image = PIPE.convert()
-            self.rect = self.image.get_rect(bottomleft=(0, 0))
 
 
 def display_score():
@@ -80,7 +22,8 @@ def display_score():
 
 
 def collision_sprite():
-    if pygame.sprite.spritecollide(player.sprite, obstacle_group, False) or pygame.sprite.spritecollide(player.sprite, border_group, False):
+    if pygame.sprite.spritecollide(player.sprite, obstacle_group, False) or \
+            pygame.sprite.spritecollide(player.sprite, border_group, False):
         obstacle_group.empty()
         return False
     else:
@@ -98,15 +41,17 @@ score = 0
 # bg_music = pygame.mixer.Sound('audio/music.wav')
 # bg_music.play(loops=-1)
 
+PLAYER = Player.Player()
+
 # Groups
 player = pygame.sprite.GroupSingle()
-player.add(Player())
+player.add(PLAYER)
 
 obstacle_group = pygame.sprite.Group()
 
 border_group = pygame.sprite.Group()
-border_group.add(Borders('down'))
-border_group.add(Borders('up'))
+border_group.add(Obstacle.Borders('down'))
+border_group.add(Obstacle.Borders('up'))
 
 sky_surface = pygame.transform.scale(SKY_SURFACE.convert(), (800, 380))
 ground_surface = GROUND_SURFACE.convert()
@@ -135,8 +80,8 @@ while True:
             if event.type == obstacle_timer:
                 x = randint(900, 1100)
                 h = randint(40, 240)
-                obstacle_group.add(Obstacle('down', x, h))
-                obstacle_group.add(Obstacle('up', x, 280-h))
+                obstacle_group.add(Obstacle.Obstacle('down', x, h))
+                obstacle_group.add(Obstacle.Obstacle('up', x, 280-h))
 
         else:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
